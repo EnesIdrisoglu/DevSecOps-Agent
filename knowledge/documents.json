@@ -1,0 +1,8 @@
+[
+  {"id":"rem-001","title":"Kritik kimlik doğrulama bulgusu","text":"Kimlik doğrulama bypass bulgularında etkilenen endpoint'i kapatın, güvenlik yamasını uygulayın ve negatif testlerle yeniden tarayın."},
+  {"id":"rem-002","title":"Güvensiz bağımlılık","text":"CVE içeren bağımlılığı üretici tarafından önerilen güvenli sürüme yükseltin, lockfile güncelleyin ve bağımlılık taramasını tekrarlayın."},
+  {"id":"rem-003","title":"Container registry timeout","text":"Container registry timeout için runner DNS, network policy, proxy ve credential süresini kontrol edin; ardından job retry uygulayın."},
+  {"id":"rem-004","title":"Eksik güvenlik başlığı","text":"HTTP güvenlik başlıklarını merkezi gateway veya uygulama middleware katmanında ekleyin ve DAST taramasıyla doğrulayın."},
+  {"id":"rem-005","title":"Release gate önerisi","text":"Kritik ve yüksek açık bulgular kapanmadan release'i manuel onay akışına alın; otomatik release değişikliği yapmayın."},
+  {"id":"rem-006","title":"Karne hedefi iyileştirme","text":"Karne hedefi karşılanmıyorsa sorumlu ekip, hedef tarih ve ölçülebilir aksiyon içeren remediation planı oluşturun."}
+]

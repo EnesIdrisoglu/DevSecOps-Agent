@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Test and tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Runtime memory and local databases
+devsecops_ai_agent/memory/*.db
+devsecops_ai_agent/memory/*.sqlite*
+
+# Generated semantic indexes; rebuild with build_index.py
+devsecops_ai_agent/knowledge/*.faiss
+devsecops_ai_agent/knowledge/*.index
+
+# Logs and local output
+*.log
+*.out
+
+# OS/editor files
+.DS_Store
+.idea/
+.vscode/
