@@ -29,10 +29,17 @@ class GlobalFindingsAgent:
             return state
         state.evidence = findings
         lines = [f"- {item['project']}: {item['severity'].upper()} — {item['title']}" for item in findings]
-        critical_high = sum(item["severity"] in {"critical", "high"} for item in findings)
+        if requested_severities == {"critical"}:
+            summary = f"Tüm projelerde {len(findings)} açık critical bulgu var:"
+        elif requested_severities == {"high"}:
+            summary = f"Tüm projelerde {len(findings)} açık high bulgu var:"
+        elif requested_severities == {"critical", "high"}:
+            summary = f"Tüm projelerde {len(findings)} açık high veya critical bulgu var:"
+        else:
+            summary = f"Tüm projelerde toplam {len(findings)} açık bulgu var:"
         state.answer = (
-            f"Tüm projelerde toplam {len(findings)} açık bulgu var; bunların {critical_high} tanesi high veya critical:\n" +
+            summary + "\n" +
             "\n".join(lines) +
-            "\n\nRelease değerlendirmesinde high/critical bulgular engel adayıdır; low/medium bulgular tek başına release engeli sayılmaz."
+            ("\n\nRelease değerlendirmesinde high/critical bulgular engel adayıdır; low/medium bulgular tek başına release engeli sayılmaz." if not requested_severities or requested_severities & {"high", "critical"} else "")
         )
         return state

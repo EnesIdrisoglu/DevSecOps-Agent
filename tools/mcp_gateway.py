@@ -75,6 +75,7 @@ class MCPGateway:
             "get_project_summary": lambda: database.project_risk_summary(arguments["project"]) or {},
             "get_projects_with_findings": lambda: database.projects_with_open_findings(),
             "get_projects_by_scanner": lambda: database.projects_by_scanner(arguments["scanner"]),
+            "list_scanners": lambda: database.list_scanners(),
             "get_global_findings": lambda: database.all_open_findings(),
             "get_release_portfolio": lambda: database.release_portfolio(),
             "get_project_scorecard": lambda: database.scorecard_status(arguments["project"]) or [],

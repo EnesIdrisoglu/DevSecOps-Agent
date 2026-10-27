@@ -132,6 +132,8 @@ def total_open_findings(db_path: str | Path = DEFAULT_DB_PATH) -> int:
 
 
 def projects_by_scanner(scanner: str, db_path: str | Path = DEFAULT_DB_PATH) -> list[dict[str, Any]]:
+    if not scanner or not scanner.strip():
+        return []
     with readonly_connection(db_path) as conn:
         rows = conn.execute("""
             SELECT p.name AS project, d.scanner, s.status, s.scanned_at, d.total_findings
@@ -142,6 +144,12 @@ def projects_by_scanner(scanner: str, db_path: str | Path = DEFAULT_DB_PATH) -> 
             ORDER BY p.name
         """, (f"%{scanner}%",)).fetchall()
         return [dict(row) for row in rows]
+
+
+def list_scanners(db_path: str | Path = DEFAULT_DB_PATH) -> list[str]:
+    with readonly_connection(db_path) as conn:
+        rows = conn.execute("SELECT DISTINCT scanner FROM scan_details ORDER BY scanner").fetchall()
+        return [row["scanner"] for row in rows]
 
 
 def release_portfolio(db_path: str | Path = DEFAULT_DB_PATH) -> list[dict[str, Any]]:

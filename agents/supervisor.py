@@ -18,6 +18,7 @@ from .global_release_agent import GlobalReleaseAgent
 from .global_scorecard_agent import GlobalScorecardAgent
 from .global_metrics_agent import GlobalMetricsAgent
 from .scanner_projects_agent import ScannerProjectsAgent
+from .scan_agent import ScanAgent
 from .job_agent import JobDiagnosticAgent
 from .knowledge_agent import KnowledgeAgent
 from .project_agent import ProjectAgent
@@ -32,7 +33,7 @@ AGENT_NAMES = Literal[
     "finding_projects_agent", "global_findings_agent", "findings_agent",
     "global_release_agent", "release_risk_agent", "global_scorecard_agent",
     "scorecard_agent", "job_diagnostic_agent", "project_agent", "knowledge_agent",
-    "global_metrics_agent", "scanner_projects_agent",
+    "global_metrics_agent", "scanner_projects_agent", "scan_agent",
 ]
 
 
@@ -47,6 +48,7 @@ class GraphState(TypedDict, total=False):
     question: str
     project: str | None
     last_project: str | None
+    scanner: str | None
     handoff: str
     answer: str
     history: list[tuple[str, str]]
@@ -67,6 +69,7 @@ Sen DevSecOps Supervisor Agent'sın. Kullanıcıyı aşağıdaki specialist agen
 - knowledge_agent: remediation, çözüm önerisi ve güvenlik bilgisi
 - global_metrics_agent: sadece istenen aggregate sayı
 - scanner_projects_agent: belirli scanner ile taranan projeler
+- scan_agent: belirli projenin son başarılı tarama tarihi ve scan geçmişi
 
 Kullanıcı belirli bir proje adı vermediyse global agent seçilmelidir. Sadece kullanıcı açıkça önceki projeye gönderme yapıyorsa follow-up kapsamı kullan.
 "critical", "high", "medium" ve "low" severity filtrelerini soruda koru; yalnızca istenen seviyeleri döndüren specialist'i seç.
@@ -100,6 +103,7 @@ class SupervisorAgent:
             "knowledge_agent": KnowledgeAgent(),
             "global_metrics_agent": GlobalMetricsAgent(),
             "scanner_projects_agent": ScannerProjectsAgent(),
+            "scan_agent": ScanAgent(),
         }
         self.graph = self._build_graph()
         self.memory = ConversationMemory()
@@ -118,12 +122,14 @@ class SupervisorAgent:
 
     def _supervisor_node(self, state: GraphState) -> dict:
         known_projects = [str(project) for project in self.mcp.call("list_projects")]
+        known_scanners = [str(scanner) for scanner in self.mcp.call("list_scanners")]
         question_lower = state["question"].lower()
         explicit_project = next((project for project in known_projects if project.lower() in question_lower), None)
+        explicit_scanner = next((scanner for scanner in known_scanners if scanner.lower() in question_lower), None)
         followup_reference = any(token in question_lower.split() for token in ("bu", "şu", "bunlar", "önceki", "aynı"))
         structured_llm = self.llm.with_structured_output(Handoff)
         response = structured_llm.invoke([
-            SystemMessage(content=SUPERVISOR_PROMPT + f"\nGeçerli proje adları: {', '.join(known_projects)}\nBu mesajda açık proje: {explicit_project or 'yok'}\nAnaforik takip ifadesi: {'var' if followup_reference else 'yok'}"),
+            SystemMessage(content=SUPERVISOR_PROMPT + f"\nGeçerli proje adları: {', '.join(known_projects)}\nGeçerli scanner adları: {', '.join(known_scanners)}\nBu mesajda açık proje: {explicit_project or 'yok'}\nBu mesajda açık scanner: {explicit_scanner or 'yok'}\nAnaforik takip ifadesi: {'var' if followup_reference else 'yok'}"),
             *([HumanMessage(content=f"Önceki proje: {state.get('last_project')}")] if state.get("last_project") else []),
             HumanMessage(content=state["question"]),
         ])
@@ -134,7 +140,8 @@ class SupervisorAgent:
             project = state["last_project"]
         elif not project and response.scope == "followup" and followup_reference:
             project = state.get("last_project")
-        return {"handoff": response.agent, "project": project, "scanner": response.scanner, "last_project": project or state.get("last_project")}
+        scanner = explicit_scanner or response.scanner
+        return {"handoff": response.agent, "project": project, "scanner": scanner, "last_project": project or state.get("last_project")}
 
     @staticmethod
     def _normalize_project(candidate: str | None, known_projects: list[str]) -> str | None:

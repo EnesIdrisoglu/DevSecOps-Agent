@@ -59,6 +59,7 @@ flowchart TD
 | `GlobalFindingsAgent` | Tüm projelerde severity bazlı bulgu analizi yapar. |
 | `FindingProjectsAgent` | Açık bulgusu bulunan projeleri listeler. |
 | `ScannerProjectsAgent` | Scanner bazında taranan projeleri listeler. |
+| `ScanAgent` | Belirli projenin son başarılı tarama tarihini ve scan geçmişini verir. |
 | `ReleaseRiskAgent` | Belirli bir projenin release riskini analiz eder. |
 | `GlobalReleaseAgent` | Tüm projelerin release uygunluğunu karşılaştırır. |
 | `JobDiagnosticAgent` | Başarısız scheduled job kayıtlarını teşhis eder. |
@@ -201,29 +202,29 @@ pip check
 
 ## 11. Proje görselleri
 
-### Web chat, global bulgular ve release analizi
+### Global critical bulgular, proje bulguları ve release analizi
 
 ![DevSecOps Copilot chat ekranı](docs/screenshots/1.png)
 
-Bu ekran görüntüsünde global critical bulgu sorgusu, proje özel bulgu detayı ve release uygunluk analizi görülmektedir.
+Bu ekran görüntüsünde tüm projelerdeki critical bulgular, `identity` projesinin bulgu detayları ve release için uygun olmayan projeler gösterilmektedir.
 
-### Scanner ve proje bulgu analizi
+### Release, SonarQube, toplam bulgu ve karne sorguları
 
 ![Scanner ve proje bulgu analizleri](docs/screenshots/2.png)
 
-SonarQube ile taranan projelerin listelenmesi ve belirli bir projenin bulgu detayları gösterilmektedir.
+Bu ekranda release’e uygun olmayan projeler, SonarQube ile taranan projeler, toplam açık bulgu sayısı ve `identity` karne durumu görülmektedir.
 
-### Global metrik ve karne sorguları
+### Global bulgular ve karne cevapları
 
 ![Global metrik ve karne cevapları](docs/screenshots/3.png)
 
-Toplam açık bulgu sayısı, tüm projelerin bulgu listesi ve proje karne durumu örneklenmiştir.
+Toplam açık bulgu sayısı, tüm projelerin severity bazlı bulguları ve proje karne durumu örneklenmiştir.
 
-### Remediation ve job teşhisi
+### Remediation, job teşhisi ve scan tarihi
 
 ![Remediation ve job teşhisi](docs/screenshots/4.png)
 
-Kritik bulgu için remediation/NVD bilgisi ve başarısız scheduled job teşhisi gösterilmektedir.
+Kritik bulgu için remediation/NVD analizi, başarısız scheduled job teşhisi ve projenin son başarılı tarama tarihi gösterilmektedir.
 
 ## 12. Değerlendirme kriterleriyle eşleşme
 
@@ -232,4 +233,3 @@ Kritik bulgu için remediation/NVD bilgisi ve başarısız scheduled job teşhis
 - **İşlevsellik:** Global/proje bazlı sorular, severity filtreleri, release analizi, job teşhisi ve CVE remediation.
 - **Kod kalitesi:** Katmanlı klasör yapısı, salt-okunur tool’lar, environment tabanlı ayarlar ve testler.
 - **Dokümantasyon:** Kurulum, servis başlatma, örnek sorular, mimari diyagram ve görsel teslim planı.
-

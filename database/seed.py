@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 from contextlib import closing
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 from ..tools.database import connect, initialize_database, DEFAULT_DB_PATH
@@ -13,6 +13,8 @@ from ..tools.database import connect, initialize_database, DEFAULT_DB_PATH
 def seed(db_path: str | Path = DEFAULT_DB_PATH) -> Path:
     initialize_database(db_path)
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    scan_time = now
+    job_time = (datetime.fromisoformat(now) - timedelta(minutes=18)).isoformat()
     with closing(connect(db_path)) as conn:
         with conn:
             conn.executescript("DELETE FROM findings; DELETE FROM scan_details; DELETE FROM scans; DELETE FROM releases; DELETE FROM scorecards; DELETE FROM job_logs; DELETE FROM projects;")
@@ -32,7 +34,7 @@ def seed(db_path: str | Path = DEFAULT_DB_PATH) -> Path:
             }
             scan_ids = {}
             for project, (status, branch, commit, scanner, duration) in scans.items():
-                conn.execute("INSERT INTO scans(project_id,scanned_at,status,branch,commit_sha) VALUES (?,?,?,?,?)", (project_ids[project], now, status, branch, commit))
+                conn.execute("INSERT INTO scans(project_id,scanned_at,status,branch,commit_sha) VALUES (?,?,?,?,?)", (project_ids[project], scan_time, status, branch, commit))
                 scan_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
                 scan_ids[project] = scan_id
                 conn.execute("INSERT INTO scan_details(scan_id,scanner,duration_seconds,total_findings,summary) VALUES (?,?,?,?,?)", (scan_id, scanner, duration, 0, f"{scanner} taraması tamamlandı."))
@@ -58,7 +60,7 @@ def seed(db_path: str | Path = DEFAULT_DB_PATH) -> Path:
             for project in project_names:
                 conn.executemany("INSERT INTO scorecards(project_id,metric,target,actual,measured_at) VALUES (?,?,?,?,?)", [(project_ids[project], "kritik bulgu kapatma oranı", 100, 75 if project in {"payments", "identity"} else 100, now), (project_ids[project], "test kapsamı", 80, 72 if project == "mobile" else 86, now)])
             jobs = [("payments", "nightly-scan", "failed", "Container registry erişimi zaman aşımına uğradı", "scanner-runner-01"), ("identity", "nightly-scan", "failed", "Snyk API rate limit aşıldı", "scanner-runner-03"), ("catalog", "nightly-scan", "success", None, "scanner-runner-02"), ("analytics", "nightly-scan", "success", None, "scanner-runner-04"), ("mobile", "mobile-security-scan", "failed", "MobSF worker bağlantısı kesildi", "mobile-runner-01"), ("notifications", "nightly-scan", "success", None, "scanner-runner-02"), ("checkout", "nightly-scan", "success", None, "scanner-runner-05"), ("search", "nightly-scan", "success", None, "scanner-runner-04")]
-            conn.executemany("INSERT INTO job_logs(project_id,job_name,status,started_at,finished_at,error,source) VALUES (?,?,?,?,?,?,?)", [(project_ids[p], j, st, now, now, e, src) for p, j, st, e, src in jobs])
+            conn.executemany("INSERT INTO job_logs(project_id,job_name,status,started_at,finished_at,error,source) VALUES (?,?,?,?,?,?,?)", [(project_ids[p], j, st, job_time, job_time, e, src) for p, j, st, e, src in jobs])
     return Path(db_path).resolve()
 
 

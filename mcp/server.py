@@ -38,6 +38,11 @@ def get_projects_by_scanner(scanner: str) -> list[dict]:
 
 
 @mcp.tool
+def list_scanners() -> list[str]:
+    return database.list_scanners()
+
+
+@mcp.tool
 def get_global_findings() -> list[dict]:
     return database.all_open_findings()
 
