@@ -14,6 +14,7 @@ DevOps güvenlik platformlarında bilgi; scan sonuçları, scanner detayları, C
 - Bir job neden başarısız oldu?
 - Bir kritik bulgu nasıl giderilmeli?
 - Bir projenin karne hedefleri ne durumda?
+- Bir projenin son başarılı taraması ne zaman yapıldı?
 
 Bu problem basit bir LLM çağrısıyla çözülemez; agent’ın doğru veriyi seçmesi, birden fazla tool çağırması, sonuçları birleştirmesi, konuşma bağlamını koruması ve remediation bilgisi araması gerekir.
 
@@ -27,12 +28,16 @@ flowchart TD
     S --> J[Job Diagnostic Agent]
     S --> C[Scorecard Agent]
     S --> P[Project Agent]
+    S --> T[Scan Agent]
+    S --> SP[Scanner Projects Agent]
     S --> K[Knowledge / Remediation Agent]
     F --> M[MCP Client]
     R --> M
     J --> M
     C --> M
     P --> M
+    T --> M
+    SP --> M
     K --> M
     M --> D[DevSecOps MCP Server]
     D --> DB[(SQLite Platform DB)]
@@ -50,6 +55,13 @@ flowchart TD
 5. LangGraph kısa dönem state’i, SQLite session memory ise kalıcı konuşma geçmişini saklar.
 6. Agent kanıta dayalı Türkçe yanıt üretir; release kararını otomatik değiştirmez.
 
+### Scan ve scanner sorgularının ayrımı
+
+- **`ScanAgent`**, proje adı verilen sorularda projenin son scan kaydındaki tarihi döndürür. Örnek: `payments projesinin son başarılı taramasının tarihi nedir?`
+- **`ScannerProjectsAgent`**, belirli bir scanner adıyla taranan projeleri listeler. Örnek: `SonarQube ile taranan projeler hangileri?`
+- Scanner adı, MCP üzerinden alınan geçerli scanner listesiyle doğrulanır; boş veya tanınmayan scanner değeri tüm projeleri eşleştirmez.
+- Scan tarihi ve job zamanı ayrı kayıtlardan okunur. Bu nedenle başarılı bir scan ile başarısız bir job aynı işlem olarak değerlendirilmez.
+
 ## 3. Specialist agent’lar
 
 | Agent | Sorumluluk |
@@ -66,6 +78,15 @@ flowchart TD
 | `ScorecardAgent` | Belirli projenin karne hedeflerini inceler. |
 | `GlobalScorecardAgent` | Tüm projelerin karne durumunu özetler. |
 | `KnowledgeAgent` | FAISS, MCP knowledge tool ve NVD üzerinden remediation önerir. |
+
+### ScanAgent örneği
+
+```text
+Kullanıcı: payments projesinin son başarılı taramasının tarihi nedir?
+Supervisor: scan_agent
+MCP tool: get_project_summary(project="payments")
+Cevap: payments projesinin son başarılı tarama tarihi: <scanned_at>
+```
 
 ## 4. Klasör yapısı
 
@@ -176,6 +197,7 @@ hangi projelerde critical bulgu var?
 identity projesinin bulguları neler?
 hangi projeler sürüm çıkışına uygun değil?
 sonarqube ile taranan projeler hangileri?
+payments projesinin son başarılı taramasının tarihi nedir?
 projelerdeki toplam bulgu sayısı kaç?
 identity projesinin karne durumu nedir?
 critical bulgu nasıl çözülebilir?
